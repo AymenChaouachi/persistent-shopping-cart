@@ -100,29 +100,4 @@ http://localhost:3000
 
 ---
 
-##  API Endpoints
 
-###  Get Cart
-GET /cart
-
-
-Returns the current user's cart.
-
----
-
-###  Add Item To Cart
-POST /cart
-
-
-JSON Body:
-
-```json
-{
-  "product": "Laptop",
-  "quantity": 1
-}
- Remove Item From Cart
-DELETE /cart/:product
-Example:
-
-DELETE /cart/Laptop
