@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Persistent Shopping Cart</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        input { margin: 5px; }
+        button { margin: 5px; }
+        ul { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<h1>Shopping Cart</h1>
+
+<input type="text" id="product" placeholder="Product name">
+<input type="number" id="quantity" placeholder="Quantity">
+<button onclick="addItem()">Add</button>
+
+<h2>Cart Items</h2>
+<ul id="cartList"></ul>
+
+<script>
+let cartId = localStorage.getItem("cartId");
+
+async function getCart() {
+    const response = await fetch("/cart", {
+        headers: cartId ? { "x-cart-id": cartId } : {}
+    });
+
+    const data = await response.json();
+
+    if (!cartId) {
+        cartId = data.cartId;
+        localStorage.setItem("cartId", cartId);
+    }
+
+    renderCart(data.items);
+}
+
+async function addItem() {
+    const product = document.getElementById("product").value;
+    const quantity = document.getElementById("quantity").value;
+
+    await fetch("/cart", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "x-cart-id": cartId
+        },
+        body: JSON.stringify({ product, quantity })
+    });
+
+    getCart();
+}
+
+async function removeItem(product) {
+    await fetch(`/cart/${product}`, {
+        method: "DELETE",
+        headers: { "x-cart-id": cartId }
+    });
+
+    getCart();
+}
+
+function renderCart(items) {
+    const list = document.getElementById("cartList");
+    list.innerHTML = "";
+
+    items.forEach(item => {
+        const li = document.createElement("li");
+        li.innerHTML = `${item.product} - ${item.quantity} 
+        <button onclick="removeItem('${item.product}')">Remove</button>`;
+        list.appendChild(li);
+    });
+}
+
+getCart();
+</script>
+
+</body>
+</html>

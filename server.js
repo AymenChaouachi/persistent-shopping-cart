@@ -1,13 +1,27 @@
+process.on("uncaughtException", (err) => {
+    console.error("UNCAUGHT ERROR:", err);
+});
+
 const express = require("express");
+const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const { loadDB, saveDB, cleanupExpiredCarts } = require("./storage");
 
 const app = express();
 const PORT = 3000;
 
+// Middleware
 app.use(express.json());
 
+// Serve frontend (absolute path)
+app.use(express.static(path.join(__dirname, "public")));
 
+// Force root route to load index.html
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Assign cart ID middleware
 app.use((req, res, next) => {
     let cartId = req.headers["x-cart-id"];
 
@@ -20,6 +34,7 @@ app.use((req, res, next) => {
     next();
 });
 
+// Get cart
 app.get("/cart", (req, res) => {
     let db = cleanupExpiredCarts(loadDB());
 
@@ -31,6 +46,7 @@ app.get("/cart", (req, res) => {
     res.json({ cartId: req.cartId, items: db[req.cartId].items });
 });
 
+// Add item
 app.post("/cart", (req, res) => {
     const { product, quantity } = req.body;
 
@@ -55,6 +71,7 @@ app.post("/cart", (req, res) => {
     res.json(cart);
 });
 
+// Remove item
 app.delete("/cart/:product", (req, res) => {
     let db = cleanupExpiredCarts(loadDB());
 
@@ -70,6 +87,7 @@ app.delete("/cart/:product", (req, res) => {
     res.json(db[req.cartId]);
 });
 
+// Start server
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
